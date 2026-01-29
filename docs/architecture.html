@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture - simple_physics</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>simple_physics</h1>
+        <p class="tagline">Architecture & Design</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="quick.html">Quick API</a></li>
+            <li><a href="user-guide.html">User Guide</a></li>
+            <li><a href="api-reference.html">API Reference</a></li>
+            <li><a href="#design">Design</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="overview">
+            <h2>Architecture Overview</h2>
+            <p>simple_physics is organized into three conceptual layers:</p>
+            <ul>
+                <li><strong>Foundation Layer:</strong> Core mathematical types (VECTOR_3D, BODY_TYPE)</li>
+                <li><strong>Domain Layer:</strong> Physics concepts (PHYSICS_BODY, PHYSICS_WORLD)</li>
+                <li><strong>Integration Layer:</strong> Numerical methods (PHYSICS_INTEGRATOR, collision detection)</li>
+            </ul>
+        </section>
+
+        <section id="design">
+            <h2>Design Principles</h2>
+
+            <h3>1. Single Responsibility</h3>
+            <p>Each class has one reason to change:</p>
+            <ul>
+                <li><code>VECTOR_3D</code> — Only responsible for vector math</li>
+                <li><code>PHYSICS_BODY</code> — Only responsible for body state (mass, position, velocity)</li>
+                <li><code>PHYSICS_WORLD</code> — Only responsible for coordinating bodies and gravity</li>
+                <li><code>PHYSICS_INTEGRATOR</code> — Only responsible for numerical integration (RK4)</li>
+                <li><code>COLLISION_DETECTOR</code> — Only responsible for detecting collisions</li>
+                <li><code>COLLISION_RESOLVER</code> — Only responsible for computing collision responses</li>
+            </ul>
+
+            <h3>2. Immutability of Results</h3>
+            <p>Operations return new objects rather than modifying state:</p>
+            <pre><code>-- ✓ Immutable: Returns new vector
+l_result := v1.add (v2)
+
+-- ✗ Wrong: Can't modify in place
+v1.x := 10.0  -- Error: read-only</code></pre>
+            <p>Exception: Commands like <code>set_position</code> modify the body itself (since bodies are stateful).</p>
+
+            <h3>3. Separation of Concerns</h3>
+            <p>Public API is separate from implementation:</p>
+            <table>
+                <tr>
+                    <th>Concern</th>
+                    <th>Responsibility</th>
+                    <th>Location</th>
+                </tr>
+                <tr>
+                    <td>Vector Math</td>
+                    <td>Component access, arithmetic</td>
+                    <td>VECTOR_3D</td>
+                </tr>
+                <tr>
+                    <td>Physics State</td>
+                    <td>Mass, position, velocity</td>
+                    <td>PHYSICS_BODY</td>
+                </tr>
+                <tr>
+                    <td>World State</td>
+                    <td>Bodies, gravity, collision list</td>
+                    <td>PHYSICS_WORLD</td>
+                </tr>
+                <tr>
+                    <td>Integration</td>
+                    <td>RK4 numerical method</td>
+                    <td>PHYSICS_INTEGRATOR</td>
+                </tr>
+                <tr>
+                    <td>Collision Detection</td>
+                    <td>Sphere-sphere collision</td>
+                    <td>COLLISION_DETECTOR</td>
+                </tr>
+                <tr>
+                    <td>Collision Response</td>
+                    <td>Impulse calculations</td>
+                    <td>COLLISION_RESOLVER</td>
+                </tr>
+            </table>
+
+            <h3>4. Design by Contract</h3>
+            <p>Every public feature has explicit contracts:</p>
+            <ul>
+                <li><strong>Preconditions:</strong> What must be true before calling (caller's responsibility)</li>
+                <li><strong>Postconditions:</strong> What will be true after (provider's responsibility)</li>
+                <li><strong>Invariants:</strong> What must always be true (class's responsibility)</li>
+            </ul>
+            <p>Example:</p>
+            <pre><code>add (other: VECTOR_3D): VECTOR_3D
+    require
+        other_not_void: other /= Void
+    ensure
+        result_not_void: Result /= Void</code></pre>
+        </section>
+
+        <section id="class-hierarchy">
+            <h2>Class Hierarchy</h2>
+
+            <h3>Core Types</h3>
+            <pre><code>
+ANY
+  ├── VECTOR_3D
+  │   (immutable 3D vectors)
+  │
+  ├── BODY_TYPE
+  │   (enumeration: STATIC, DYNAMIC)
+  │
+  ├── PHYSICS_BODY
+  │   (stateful: position, velocity change)
+  │
+  ├── SIMPLE_PHYSICS
+  │   (facade entry point)
+  │
+  ├── PHYSICS_WORLD
+  │   (world orchestrator)
+  │
+  ├── PHYSICS_RESULT
+  │   (immutable integration result)
+  │
+  ├── COLLISION_INFO
+  │   (immutable collision geometry)
+  │
+  ├── COLLISION_RESULT
+  │   (immutable post-collision data)
+  │
+  ├── PHYSICS_INTEGRATOR
+  │   (RK4 integration)
+  │
+  ├── COLLISION_DETECTOR
+  │   (sphere collision detection)
+  │
+  └── COLLISION_RESOLVER
+      (impulse-based resolution)
+            </code></pre>
+
+            <h3>No Inheritance Chains</h3>
+            <p>By design, simple_physics avoids deep inheritance hierarchies. Each class inherits directly from <code>ANY</code>:</p>
+            <ul>
+                <li><strong>Benefit:</strong> Simple, flat hierarchy — easy to understand</li>
+                <li><strong>Benefit:</strong> Composition over inheritance</li>
+                <li><strong>Trade-off:</strong> Some code duplication in data classes</li>
+            </ul>
+        </section>
+
+        <section id="data-flow">
+            <h2>Data Flow</h2>
+
+            <h3>Typical Simulation Loop</h3>
+            <pre><code>
+SIMPLE_PHYSICS
+    │
+    ├── set_gravity(9.8)
+    │   └── Creates default gravity vector
+    │
+    └── create_world
+        │
+        ├── PHYSICS_WORLD (initialized with gravity)
+        │   │
+        │   ├── add_body(body1)
+        │   ├── add_body(body2)
+        │   └── add_body(body3)
+        │
+        └── integrate_step(dt) [repeated]
+            │
+            ├── PHYSICS_INTEGRATOR
+            │   └── RK4 step (4 force evaluations)
+            │
+            ├── Update positions
+            ├── Update velocities
+            │
+            ├── COLLISION_DETECTOR
+            │   └── Find collisions
+            │
+            └── COLLISION_RESOLVER
+                └── Apply impulses
+            </code></pre>
+
+            <h3>Vector Operations Flow</h3>
+            <pre><code>
+VECTOR_3D (immutable)
+    │
+    ├── make(x, y, z) → new VECTOR_3D
+    ├── zero → new VECTOR_3D (0, 0, 0)
+    │
+    ├── add(other) → new VECTOR_3D (result)
+    ├── subtract(other) → new VECTOR_3D (result)
+    ├── scale(factor) → new VECTOR_3D (result)
+    │
+    ├── dot_product(other) → REAL_64
+    ├── cross_product(other) → new VECTOR_3D
+    │
+    ├── magnitude → REAL_64
+    ├── normalize → new VECTOR_3D (unit vector)
+            </code></pre>
+
+            <h3>Body State Flow</h3>
+            <pre><code>
+PHYSICS_BODY (stateful)
+    │
+    ├── make(mass, radius, pos, vel) → DYNAMIC body
+    ├── make_static(mass, pos) → STATIC body
+    │
+    ├── position, velocity → VECTOR_3D (read)
+    ├── body_type → BODY_TYPE (read)
+    │
+    ├── set_position(new_pos) → modifies self
+    ├── set_velocity(new_vel) → modifies self
+    │
+    ├── kinetic_energy → REAL_64
+    └── potential_energy(g) → REAL_64
+            </code></pre>
+        </section>
+
+        <section id="collision-pipeline">
+            <h2>Collision Processing Pipeline</h2>
+
+            <h3>Phase 1: Detection</h3>
+            <p><code>COLLISION_DETECTOR</code> identifies colliding pairs:</p>
+            <ol>
+                <li>For each body pair (A, B):</li>
+                <li>Calculate distance between centers</li>
+                <li>If distance &lt; radius_a + radius_b, collision detected</li>
+                <li>Create <code>COLLISION_INFO</code> with contact geometry</li>
+            </ol>
+
+            <h3>Phase 2: Resolution</h3>
+            <p><code>COLLISION_RESOLVER</code> computes impulse response:</p>
+            <ol>
+                <li>For each <code>COLLISION_INFO</code>:</li>
+                <li>Calculate relative velocity at contact point</li>
+                <li>Apply impulse along collision normal</li>
+                <li>Update body velocities</li>
+                <li>Create <code>COLLISION_RESULT</code> with post-collision velocities</li>
+            </ol>
+
+            <h3>Phase 3: Integration</h3>
+            <p><code>PHYSICS_WORLD</code> orchestrates both phases:</p>
+            <pre><code>integrate_step (dt)
+    │
+    ├── Run PHYSICS_INTEGRATOR.step(dt)
+    │   └── Update positions and velocities (RK4)
+    │
+    ├── Run COLLISION_DETECTOR.detect()
+    │   └── Find all collisions
+    │
+    ├── For each collision:
+    │   Run COLLISION_RESOLVER.resolve()
+    │   └── Apply impulses
+    │
+    └── Return PHYSICS_RESULT
+        └── Collision count and success flag
+            </code></pre>
+        </section>
+
+        <section id="integration-method">
+            <h2>RK4 Integration</h2>
+
+            <h3>Why RK4?</h3>
+            <p>Fourth-order Runge-Kutta provides:</p>
+            <ul>
+                <li><strong>Accuracy:</strong> O(h⁵) error per step (h = time step)</li>
+                <li><strong>Stability:</strong> Good for typical physics parameters</li>
+                <li><strong>Efficiency:</strong> 4 force evaluations per step (better than naive methods)</li>
+            </ul>
+
+            <h3>Algorithm</h3>
+            <pre><code>
+Given: position p, velocity v, forces F, time step dt
+
+k1 = F(p, v)
+k2 = F(p + 0.5*dt*v, v + 0.5*dt*k1)
+k3 = F(p + 0.5*dt*(v + 0.5*dt*k2), v + 0.5*dt*k2)
+k4 = F(p + dt*(v + 0.5*dt*k3), v + 0.5*dt*k3)
+
+p_new = p + dt * (v + dt/6 * (k1 + 2*k2 + 2*k3 + k4))
+v_new = v + dt/6 * (k1 + 2*k2 + 2*k3 + k4)
+            </code></pre>
+
+            <h3>Time Step Recommendations</h3>
+            <table>
+                <tr>
+                    <th>Time Step</th>
+                    <th>FPS</th>
+                    <th>Accuracy</th>
+                    <th>Use Case</th>
+                </tr>
+                <tr>
+                    <td>0.008 (125 Hz)</td>
+                    <td>—</td>
+                    <td>Very High</td>
+                    <td>High-speed collisions, precision</td>
+                </tr>
+                <tr>
+                    <td>0.016 (60 Hz)</td>
+                    <td>60 FPS</td>
+                    <td>High</td>
+                    <td>Real-time visualization (default)</td>
+                </tr>
+                <tr>
+                    <td>0.033 (30 Hz)</td>
+                    <td>30 FPS</td>
+                    <td>Medium</td>
+                    <td>Slower systems only</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="future-extensions">
+            <h2>Future Extension Points</h2>
+
+            <h3>Phase 2: Advanced Collision</h3>
+            <ul>
+                <li>Capsule and box collision shapes</li>
+                <li>Spatial partitioning (octree) for 100+ bodies</li>
+                <li>Broadphase optimization</li>
+            </ul>
+
+            <h3>Phase 3: Advanced Physics</h3>
+            <ul>
+                <li>Angular velocity and torque</li>
+                <li>Friction and drag</li>
+                <li>Constraints (joints, ropes)</li>
+            </ul>
+
+            <h3>Phase 4: Performance</h3>
+            <ul>
+                <li>GPU acceleration via EiffelCUDA (if available)</li>
+                <li>SCOOP parallelization for collision detection</li>
+                <li>Spatial hashing for fast neighbor lookup</li>
+            </ul>
+
+            <h3>Extension Pattern</h3>
+            <p>Adding new features follows this pattern:</p>
+            <ol>
+                <li>Create new immutable data class (e.g., <code>TORQUE</code>)</li>
+                <li>Add feature to <code>PHYSICS_BODY</code> with contracts</li>
+                <li>Update <code>PHYSICS_INTEGRATOR</code> computation</li>
+                <li>Add tests to verify new behavior</li>
+                <li>Update documentation</li>
+            </ol>
+        </section>
+
+        <section id="performance-characteristics">
+            <h2>Performance Characteristics</h2>
+
+            <h3>Time Complexity</h3>
+            <table>
+                <tr>
+                    <th>Operation</th>
+                    <th>Complexity</th>
+                    <th>Notes</th>
+                </tr>
+                <tr>
+                    <td>Vector arithmetic</td>
+                    <td>O(1)</td>
+                    <td>Constant time</td>
+                </tr>
+                <tr>
+                    <td>Body creation</td>
+                    <td>O(1)</td>
+                    <td>Constant time</td>
+                </tr>
+                <tr>
+                    <td>Add/remove body</td>
+                    <td>O(1)</td>
+                    <td>List append/removal</td>
+                </tr>
+                <tr>
+                    <td>Collision detection</td>
+                    <td>O(n²)</td>
+                    <td>All pairs checked</td>
+                </tr>
+                <tr>
+                    <td>Integration step</td>
+                    <td>O(n)</td>
+                    <td>Update all bodies (4 force evals)</td>
+                </tr>
+                <tr>
+                    <td>Full step</td>
+                    <td>O(n²)</td>
+                    <td>Dominated by collision detection</td>
+                </tr>
+            </table>
+
+            <h3>Scaling Guidance</h3>
+            <ul>
+                <li><strong>1-50 bodies:</strong> Real-time on any modern machine</li>
+                <li><strong>50-200 bodies:</strong> Monitor performance, may need optimization</li>
+                <li><strong>200+ bodies:</strong> Requires spatial partitioning (Phase 2 feature)</li>
+            </ul>
+        </section>
+
+        <section id="testing-strategy">
+            <h2>Testing Strategy</h2>
+
+            <h3>Test Organization</h3>
+            <table>
+                <tr>
+                    <th>Category</th>
+                    <th>Count</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td>Unit Tests</td>
+                    <td>52</td>
+                    <td>Individual class functionality</td>
+                </tr>
+                <tr>
+                    <td>Adversarial Tests</td>
+                    <td>18</td>
+                    <td>Boundary values, stress, edge cases</td>
+                </tr>
+                <tr>
+                    <td>Total</td>
+                    <td>70</td>
+                    <td>100% pass rate required</td>
+                </tr>
+            </table>
+
+            <h3>Test Coverage by Class</h3>
+            <ul>
+                <li><code>VECTOR_3D</code> — 22 tests (all operations, edge cases)</li>
+                <li><code>PHYSICS_BODY</code> — 11 tests (creation, modification, energy)</li>
+                <li><code>SIMPLE_PHYSICS</code> — 5 tests (facade, fluent API)</li>
+                <li><code>PHYSICS_WORLD</code> — 6 tests (world management, integration)</li>
+                <li>Adversarial suite — 18 tests (stress, numerical stability)</li>
+            </ul>
+
+            <h3>Contract Verification</h3>
+            <p>All tests verify contracts:</p>
+            <ul>
+                <li>Preconditions: Validate error handling when violated</li>
+                <li>Postconditions: Verify expected results</li>
+                <li>Invariants: Check consistency after operations</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>For API details, see <a href="api-reference.html">API Reference</a>. For examples, see <a href="cookbook.html">Cookbook</a>.</p>
+            <p>&copy; 2026 Simple Eiffel Contributors. MIT License.</p>
+        </footer>
+    </main>
+</body>
+</html>

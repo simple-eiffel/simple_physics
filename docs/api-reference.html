@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - simple_physics</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>simple_physics</h1>
+        <p class="tagline">Complete API Reference</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="quick.html">Quick API</a></li>
+            <li><a href="user-guide.html">User Guide</a></li>
+            <li><a href="#classes">Classes</a></li>
+            <li><a href="architecture.html">Architecture</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="overview">
+            <h2>API Overview</h2>
+            <p>simple_physics provides 11 public classes for physics simulation. This reference documents every class and feature.</p>
+
+            <h3>Core Classes</h3>
+            <table>
+                <tr>
+                    <th>Class</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td><code>VECTOR_3D</code></td>
+                    <td>3D immutable vector for positions, velocities, forces</td>
+                </tr>
+                <tr>
+                    <td><code>PHYSICS_BODY</code></td>
+                    <td>Rigid body with mass, position, velocity, type</td>
+                </tr>
+                <tr>
+                    <td><code>BODY_TYPE</code></td>
+                    <td>Enumeration: STATIC or DYNAMIC</td>
+                </tr>
+                <tr>
+                    <td><code>SIMPLE_PHYSICS</code></td>
+                    <td>Facade entry point for library</td>
+                </tr>
+                <tr>
+                    <td><code>PHYSICS_WORLD</code></td>
+                    <td>Orchestrates simulation with multiple bodies</td>
+                </tr>
+                <tr>
+                    <td><code>PHYSICS_INTEGRATOR</code></td>
+                    <td>RK4 numerical integration (future)</td>
+                </tr>
+                <tr>
+                    <td><code>COLLISION_DETECTOR</code></td>
+                    <td>Sphere-sphere collision detection (future)</td>
+                </tr>
+                <tr>
+                    <td><code>COLLISION_INFO</code></td>
+                    <td>Collision geometry data</td>
+                </tr>
+                <tr>
+                    <td><code>COLLISION_RESOLVER</code></td>
+                    <td>Collision response calculation (future)</td>
+                </tr>
+                <tr>
+                    <td><code>COLLISION_RESULT</code></td>
+                    <td>Post-collision velocity data</td>
+                </tr>
+                <tr>
+                    <td><code>PHYSICS_RESULT</code></td>
+                    <td>Integration step results</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="classes">
+            <h2>Class Documentation</h2>
+
+            <!-- VECTOR_3D -->
+            <article id="vector_3d" class="api-class">
+                <h3>VECTOR_3D</h3>
+                <p><strong>Purpose:</strong> Immutable 3D vector for physics calculations.</p>
+                <p><strong>Inheritance:</strong> Inherits from <code>ANY</code></p>
+
+                <h4>Creation Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>make</code></td>
+                        <td><code>a_x, a_y, a_z: REAL_64</code></td>
+                        <td>—</td>
+                        <td>Create vector with components (x, y, z)</td>
+                    </tr>
+                    <tr>
+                        <td><code>zero</code></td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>Create zero vector (0, 0, 0)</td>
+                    </tr>
+                </table>
+
+                <h4>Access Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>x</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>X component (read-only)</td>
+                    </tr>
+                    <tr>
+                        <td><code>y</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>Y component (read-only)</td>
+                    </tr>
+                    <tr>
+                        <td><code>z</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>Z component (read-only)</td>
+                    </tr>
+                    <tr>
+                        <td><code>magnitude</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>Length of vector: √(x² + y² + z²)</td>
+                    </tr>
+                </table>
+
+                <h4>Arithmetic Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>add</code></td>
+                        <td><code>other: VECTOR_3D</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Vector addition: Self + Other</td>
+                    </tr>
+                    <tr>
+                        <td><code>subtract</code></td>
+                        <td><code>other: VECTOR_3D</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Vector subtraction: Self - Other</td>
+                    </tr>
+                    <tr>
+                        <td><code>scale</code></td>
+                        <td><code>factor: REAL_64</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Scalar multiplication: Self × Factor</td>
+                    </tr>
+                    <tr>
+                        <td><code>dot_product</code></td>
+                        <td><code>other: VECTOR_3D</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>Dot product: Self · Other</td>
+                    </tr>
+                    <tr>
+                        <td><code>cross_product</code></td>
+                        <td><code>other: VECTOR_3D</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Cross product: Self × Other</td>
+                    </tr>
+                    <tr>
+                        <td><code>normalize</code></td>
+                        <td>—</td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Unit vector in same direction (or zero if near-zero)</td>
+                    </tr>
+                </table>
+
+                <h4>Invariant</h4>
+                <pre><code>-- Components are valid REAL_64 values
+-- (No NaN or Infinity)</code></pre>
+            </article>
+
+            <!-- PHYSICS_BODY -->
+            <article id="physics_body" class="api-class">
+                <h3>PHYSICS_BODY</h3>
+                <p><strong>Purpose:</strong> Represents a rigid body in the physics world.</p>
+                <p><strong>Inheritance:</strong> Inherits from <code>ANY</code></p>
+
+                <h4>Creation Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>make</code></td>
+                        <td><code>a_mass, a_radius: REAL_64; a_position, a_velocity: VECTOR_3D</code></td>
+                        <td>Create dynamic body with mass, radius, position, velocity</td>
+                    </tr>
+                    <tr>
+                        <td><code>make_static</code></td>
+                        <td><code>a_mass: REAL_64; a_position: VECTOR_3D</code></td>
+                        <td>Create static (immovable) body</td>
+                    </tr>
+                </table>
+
+                <h4>Access Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>mass</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>Body mass in kg (read-only)</td>
+                    </tr>
+                    <tr>
+                        <td><code>radius</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>Body radius in meters (read-only)</td>
+                    </tr>
+                    <tr>
+                        <td><code>position</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Current position in space (read-only)</td>
+                    </tr>
+                    <tr>
+                        <td><code>velocity</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Current velocity m/s (read-only)</td>
+                    </tr>
+                    <tr>
+                        <td><code>body_type</code></td>
+                        <td><code>BODY_TYPE</code></td>
+                        <td>STATIC or DYNAMIC (read-only)</td>
+                    </tr>
+                    <tr>
+                        <td><code>kinetic_energy</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>KE = 0.5 × mass × velocity² in Joules</td>
+                    </tr>
+                </table>
+
+                <h4>Query Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>potential_energy</code></td>
+                        <td><code>gravity: REAL_64</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>PE = mass × gravity × height (y component)</td>
+                    </tr>
+                </table>
+
+                <h4>Command Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>set_position</code></td>
+                        <td><code>new_position: VECTOR_3D</code></td>
+                        <td>Update position (teleport)</td>
+                    </tr>
+                    <tr>
+                        <td><code>set_velocity</code></td>
+                        <td><code>new_velocity: VECTOR_3D</code></td>
+                        <td>Update velocity</td>
+                    </tr>
+                </table>
+
+                <h4>Invariant</h4>
+                <pre><code>-- mass > 0
+-- radius > 0
+-- body_type is STATIC or DYNAMIC</code></pre>
+            </article>
+
+            <!-- BODY_TYPE -->
+            <article id="body_type" class="api-class">
+                <h3>BODY_TYPE</h3>
+                <p><strong>Purpose:</strong> Enumeration for static vs dynamic bodies.</p>
+                <p><strong>Values:</strong></p>
+                <ul>
+                    <li><code>STATIC</code> — Immovable body (e.g., floor, wall)</li>
+                    <li><code>DYNAMIC</code> — Movable body (affected by gravity and forces)</li>
+                </ul>
+
+                <h4>Access Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>is_static</code></td>
+                        <td><code>BOOLEAN</code></td>
+                        <td>True if STATIC</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_dynamic</code></td>
+                        <td><code>BOOLEAN</code></td>
+                        <td>True if DYNAMIC</td>
+                    </tr>
+                </table>
+            </article>
+
+            <!-- SIMPLE_PHYSICS -->
+            <article id="simple_physics" class="api-class">
+                <h3>SIMPLE_PHYSICS</h3>
+                <p><strong>Purpose:</strong> Facade entry point for the library.</p>
+                <p><strong>Inheritance:</strong> Inherits from <code>ANY</code></p>
+
+                <h4>Creation Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>make</code></td>
+                        <td>—</td>
+                        <td>Create library instance with default settings</td>
+                    </tr>
+                </table>
+
+                <h4>Configuration Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>set_gravity</code></td>
+                        <td><code>gravity: REAL_64</code></td>
+                        <td><code>like Current</code></td>
+                        <td>Set gravity magnitude (fluent, returns self for chaining)</td>
+                    </tr>
+                </table>
+
+                <h4>Factory Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>create_world</code></td>
+                        <td><code>PHYSICS_WORLD</code></td>
+                        <td>Create a new physics world with configured gravity</td>
+                    </tr>
+                </table>
+
+                <h4>Access Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>world</code></td>
+                        <td><code>PHYSICS_WORLD</code></td>
+                        <td>Access the most recently created world</td>
+                    </tr>
+                </table>
+            </article>
+
+            <!-- PHYSICS_WORLD -->
+            <article id="physics_world" class="api-class">
+                <h3>PHYSICS_WORLD</h3>
+                <p><strong>Purpose:</strong> Orchestrates physics simulation with multiple bodies.</p>
+                <p><strong>Inheritance:</strong> Inherits from <code>ANY</code></p>
+
+                <h4>Creation Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>make</code></td>
+                        <td><code>gravity: VECTOR_3D</code></td>
+                        <td>Create world with gravity vector</td>
+                    </tr>
+                </table>
+
+                <h4>Configuration Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>set_gravity</code></td>
+                        <td><code>new_gravity: VECTOR_3D</code></td>
+                        <td>Update gravity vector</td>
+                    </tr>
+                </table>
+
+                <h4>Body Management Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>add_body</code></td>
+                        <td><code>body: PHYSICS_BODY</code></td>
+                        <td>Add body to simulation</td>
+                    </tr>
+                    <tr>
+                        <td><code>remove_body</code></td>
+                        <td><code>body: PHYSICS_BODY</code></td>
+                        <td>Remove body from simulation</td>
+                    </tr>
+                </table>
+
+                <h4>Query Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>gravity</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Current gravity vector</td>
+                    </tr>
+                    <tr>
+                        <td><code>bodies</code></td>
+                        <td><code>LIST [PHYSICS_BODY]</code></td>
+                        <td>All bodies in the world</td>
+                    </tr>
+                    <tr>
+                        <td><code>body_count</code></td>
+                        <td><code>INTEGER</code></td>
+                        <td>Number of bodies</td>
+                    </tr>
+                </table>
+
+                <h4>Simulation Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Parameters</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>integrate_step</code></td>
+                        <td><code>dt: REAL_64</code></td>
+                        <td><code>PHYSICS_RESULT</code></td>
+                        <td>Advance simulation by dt seconds using RK4 integration</td>
+                    </tr>
+                </table>
+
+                <h4>Invariant</h4>
+                <pre><code>-- gravity is valid vector
+-- body_count >= 0</code></pre>
+            </article>
+
+            <!-- PHYSICS_RESULT -->
+            <article id="physics_result" class="api-class">
+                <h3>PHYSICS_RESULT</h3>
+                <p><strong>Purpose:</strong> Result of a physics integration step.</p>
+                <p><strong>Inheritance:</strong> Immutable</p>
+
+                <h4>Access Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>is_success</code></td>
+                        <td><code>BOOLEAN</code></td>
+                        <td>True if step completed successfully</td>
+                    </tr>
+                    <tr>
+                        <td><code>collision_count</code></td>
+                        <td><code>INTEGER</code></td>
+                        <td>Number of collisions detected</td>
+                    </tr>
+                </table>
+            </article>
+
+            <!-- COLLISION_INFO -->
+            <article id="collision_info" class="api-class">
+                <h3>COLLISION_INFO</h3>
+                <p><strong>Purpose:</strong> Immutable collision detection data.</p>
+
+                <h4>Access Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>body_a</code></td>
+                        <td><code>PHYSICS_BODY</code></td>
+                        <td>First colliding body</td>
+                    </tr>
+                    <tr>
+                        <td><code>body_b</code></td>
+                        <td><code>PHYSICS_BODY</code></td>
+                        <td>Second colliding body</td>
+                    </tr>
+                    <tr>
+                        <td><code>contact_point</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Point of collision in 3D space</td>
+                    </tr>
+                    <tr>
+                        <td><code>normal</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Collision normal (unit vector)</td>
+                    </tr>
+                    <tr>
+                        <td><code>penetration_depth</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>How far objects overlap</td>
+                    </tr>
+                </table>
+            </article>
+
+            <!-- COLLISION_RESULT -->
+            <article id="collision_result" class="api-class">
+                <h3>COLLISION_RESULT</h3>
+                <p><strong>Purpose:</strong> Immutable post-collision response data.</p>
+
+                <h4>Access Features</h4>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Returns</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>body_a_velocity</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Updated velocity for body A after collision</td>
+                    </tr>
+                    <tr>
+                        <td><code>body_b_velocity</code></td>
+                        <td><code>VECTOR_3D</code></td>
+                        <td>Updated velocity for body B after collision</td>
+                    </tr>
+                    <tr>
+                        <td><code>energy_loss</code></td>
+                        <td><code>REAL_64</code></td>
+                        <td>Energy dissipated in collision (Joules)</td>
+                    </tr>
+                </table>
+            </article>
+
+            <!-- PHYSICS_INTEGRATOR -->
+            <article id="physics_integrator" class="api-class">
+                <h3>PHYSICS_INTEGRATOR (Future)</h3>
+                <p><strong>Purpose:</strong> RK4 numerical integration for physics equations.</p>
+                <p><strong>Status:</strong> Planned for Phase 2 (future release)</p>
+            </article>
+
+            <!-- COLLISION_DETECTOR -->
+            <article id="collision_detector" class="api-class">
+                <h3>COLLISION_DETECTOR (Future)</h3>
+                <p><strong>Purpose:</strong> Sphere-sphere collision detection.</p>
+                <p><strong>Status:</strong> Planned for Phase 2 (future release)</p>
+            </article>
+
+            <!-- COLLISION_RESOLVER -->
+            <article id="collision_resolver" class="api-class">
+                <h3>COLLISION_RESOLVER (Future)</h3>
+                <p><strong>Purpose:</strong> Impulse-based collision response.</p>
+                <p><strong>Status:</strong> Planned for Phase 2 (future release)</p>
+            </article>
+        </section>
+
+        <section id="contracts">
+            <h2>Contract Reference</h2>
+            <p>All public features are protected by Design by Contract specifications. Key patterns:</p>
+
+            <h3>Creation Contracts</h3>
+            <pre><code>make (a_x, a_y, a_z: REAL_64)
+    -- Create vector with components
+    -- No preconditions (always allowed)
+    ensure
+        x_set: x = a_x
+        y_set: y = a_y
+        z_set: z = a_z</code></pre>
+
+            <h3>Arithmetic Contracts</h3>
+            <pre><code>add (other: VECTOR_3D): VECTOR_3D
+    -- Vector addition
+    require
+        other_not_void: other /= Void
+    ensure
+        result_not_void: Result /= Void
+        addition_correct: -- result = self + other</code></pre>
+
+            <h3>Modification Contracts</h3>
+            <pre><code>set_position (new_position: VECTOR_3D)
+    require
+        new_position_not_void: new_position /= Void
+    ensure
+        position_set: position ~ new_position
+        velocity_unchanged: velocity ~ old velocity</code></pre>
+        </section>
+
+        <footer>
+            <p>For quick reference, see <a href="quick.html">Quick API</a>. For tutorials, see <a href="user-guide.html">User Guide</a>.</p>
+            <p>&copy; 2026 Simple Eiffel Contributors. MIT License.</p>
+        </footer>
+    </main>
+</body>
+</html>

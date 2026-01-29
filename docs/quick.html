@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick API Reference - simple_physics</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>simple_physics</h1>
+        <p class="tagline">Quick API Reference</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="#vectors">Vectors</a></li>
+            <li><a href="#bodies">Bodies</a></li>
+            <li><a href="#world">World</a></li>
+            <li><a href="user-guide.html">User Guide</a></li>
+            <li><a href="api-reference.html">Full API</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="vectors">
+            <h2>3D Vectors</h2>
+            <p>Immutable vectors for physics calculations.</p>
+
+            <h3>Creation</h3>
+            <pre><code>local
+    l_vec: VECTOR_3D
+do
+    -- Create vector with components
+    create l_vec.make (1.0, 2.0, 3.0)
+
+    -- Create zero vector
+    create l_vec.zero
+end</code></pre>
+
+            <h3>Properties</h3>
+            <pre><code>l_mag := l_vec.magnitude      -- Length: sqrt(x² + y² + z²)
+l_dot := v1.dot_product (v2) -- Dot product: v1 · v2
+l_cross := v1.cross_product (v2) -- Cross product: v1 × v2</code></pre>
+
+            <h3>Operations</h3>
+            <pre><code>l_result := v1.add (v2)          -- Vector addition
+l_result := v1.subtract (v2)     -- Vector subtraction
+l_result := v1.scale (2.0)       -- Scalar multiplication
+l_result := v1.normalize         -- Unit vector (or zero if near zero)</code></pre>
+        </section>
+
+        <section id="bodies">
+            <h2>Rigid Bodies</h2>
+            <p>Dynamic and static bodies for simulation.</p>
+
+            <h3>Creation</h3>
+            <pre><code>local
+    l_body: PHYSICS_BODY
+    l_pos, l_vel: VECTOR_3D
+do
+    create l_pos.make (0.0, 10.0, 0.0)
+    create l_vel.make (5.0, 0.0, 0.0)
+
+    -- Dynamic body
+    create l_body.make (10.0, 0.5, l_pos, l_vel)
+
+    -- Static body (immovable)
+    create l_body.make_static (2.0, l_pos)
+end</code></pre>
+
+            <h3>Properties</h3>
+            <pre><code>l_mass := l_body.mass              -- Body mass
+l_pos := l_body.position           -- Current position (VECTOR_3D)
+l_vel := l_body.velocity           -- Current velocity (VECTOR_3D)
+l_type := l_body.body_type         -- STATIC or DYNAMIC
+l_ke := l_body.kinetic_energy      -- KE = 0.5 * m * v²
+l_pe := l_body.potential_energy (g) -- PE = m * g * h</code></pre>
+
+            <h3>Modification</h3>
+            <pre><code>l_body.set_position (new_position)
+l_body.set_velocity (new_velocity)</code></pre>
+        </section>
+
+        <section id="world">
+            <h2>Physics World</h2>
+            <p>Simulate multiple bodies with gravity.</p>
+
+            <h3>Creation and Configuration</h3>
+            <pre><code>local
+    l_physics: SIMPLE_PHYSICS
+    l_world: PHYSICS_WORLD
+do
+    create l_physics.make
+    l_physics.set_gravity (9.8).do_nothing
+    l_world := l_physics.create_world
+
+    -- Or create world directly
+    create l_world.make (create {VECTOR_3D}.make (0.0, -9.8, 0.0))
+end</code></pre>
+
+            <h3>Body Management</h3>
+            <pre><code>l_world.add_body (l_body)      -- Add body to world
+l_world.remove_body (l_body)   -- Remove body
+l_count := l_world.body_count  -- Number of bodies</code></pre>
+
+            <h3>Simulation</h3>
+            <pre><code>l_world.set_gravity (new_gravity_vector)
+l_result := l_world.integrate_step (0.016) -- 60 FPS time step</code></pre>
+        </section>
+
+        <section id="energy">
+            <h2>Energy Calculations</h2>
+
+            <h3>Kinetic Energy</h3>
+            <pre><code>-- For moving body: KE = 0.5 * mass * velocity²
+l_ke := l_body.kinetic_energy
+
+-- Static bodies always have zero KE
+if l_body.body_type.is_static then
+    l_ke := 0.0
+end</code></pre>
+
+            <h3>Potential Energy</h3>
+            <pre><code>-- PE = mass * gravity * height (y-component)
+l_gravity := 9.8
+l_pe := l_body.potential_energy (l_gravity)</code></pre>
+        </section>
+
+        <section id="patterns">
+            <h2>Common Patterns</h2>
+
+            <h3>Fluent Configuration</h3>
+            <pre><code>l_physics.set_gravity (9.8).do_nothing
+
+-- Returns Current (self) for method chaining
+l_world := l_physics.create_world</code></pre>
+
+            <h3>Checking Body Type</h3>
+            <pre><code>if l_body.body_type.is_dynamic then
+    -- Dynamic body - can move
+    update_velocity (l_body)
+else
+    -- Static body - immovable
+    assert_no_velocity_change (l_body)
+end</code></pre>
+
+            <h3>Iteration Loop</h3>
+            <pre><code>from i := 1 until i > simulation_time / dt loop
+    l_result := l_world.integrate_step (dt)
+    update_display (l_world)
+    i := i + 1
+end</code></pre>
+        </section>
+
+        <footer>
+            <p>For complete documentation, see <a href="api-reference.html">API Reference</a> or <a href="user-guide.html">User Guide</a></p>
+            <p>&copy; 2026 Simple Eiffel Contributors. MIT License.</p>
+        </footer>
+    </main>
+</body>
+</html>

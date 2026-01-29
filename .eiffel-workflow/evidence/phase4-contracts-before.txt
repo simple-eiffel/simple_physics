@@ -1,0 +1,62 @@
+/d/prod/simple_physics/src/body_type.e:17:		ensure
+/d/prod/simple_physics/src/body_type.e:26:		ensure
+/d/prod/simple_physics/src/body_type.e:49:invariant
+/d/prod/simple_physics/src/collision_detector.e:12:		require
+/d/prod/simple_physics/src/collision_detector.e:35:		require
+/d/prod/simple_physics/src/collision_detector.e:43:		ensure
+/d/prod/simple_physics/src/collision_info.e:15:		require
+/d/prod/simple_physics/src/collision_info.e:27:		ensure
+/d/prod/simple_physics/src/collision_info.e:52:invariant
+/d/prod/simple_physics/src/collision_resolver.e:12:		require
+/d/prod/simple_physics/src/collision_resolver.e:21:		ensure
+/d/prod/simple_physics/src/collision_result.e:15:		require
+/d/prod/simple_physics/src/collision_result.e:21:		ensure
+/d/prod/simple_physics/src/collision_result.e:34:invariant
+/d/prod/simple_physics/src/physics_body.e:15:		require
+/d/prod/simple_physics/src/physics_body.e:28:		ensure
+/d/prod/simple_physics/src/physics_body.e:38:		require
+/d/prod/simple_physics/src/physics_body.e:49:		ensure
+/d/prod/simple_physics/src/physics_body.e:79:		require
+/d/prod/simple_physics/src/physics_body.e:83:		ensure
+/d/prod/simple_physics/src/physics_body.e:91:		require
+/d/prod/simple_physics/src/physics_body.e:95:		ensure
+/d/prod/simple_physics/src/physics_body.e:111:		ensure
+/d/prod/simple_physics/src/physics_body.e:118:		require
+/d/prod/simple_physics/src/physics_body.e:126:		ensure
+/d/prod/simple_physics/src/physics_body.e:135:invariant
+/d/prod/simple_physics/src/physics_integrator.e:12:		require
+/d/prod/simple_physics/src/physics_integrator.e:23:		ensure
+/d/prod/simple_physics/src/physics_result.e:15:		require
+/d/prod/simple_physics/src/physics_result.e:25:		ensure
+/d/prod/simple_physics/src/physics_result.e:50:invariant
+/d/prod/simple_physics/src/physics_world.e:15:		require
+/d/prod/simple_physics/src/physics_world.e:20:		ensure
+/d/prod/simple_physics/src/physics_world.e:37:		ensure
+/d/prod/simple_physics/src/physics_world.e:48:		require
+/d/prod/simple_physics/src/physics_world.e:52:		ensure
+/d/prod/simple_physics/src/physics_world.e:58:		require
+/d/prod/simple_physics/src/physics_world.e:62:		ensure
+/d/prod/simple_physics/src/physics_world.e:70:		require
+/d/prod/simple_physics/src/physics_world.e:74:		ensure
+/d/prod/simple_physics/src/physics_world.e:80:		require
+/d/prod/simple_physics/src/physics_world.e:88:		ensure
+/d/prod/simple_physics/src/physics_world.e:92:invariant
+/d/prod/simple_physics/src/simple_physics.e:18:		ensure
+/d/prod/simple_physics/src/simple_physics.e:27:		require
+/d/prod/simple_physics/src/simple_physics.e:32:		ensure
+/d/prod/simple_physics/src/simple_physics.e:45:		ensure
+/d/prod/simple_physics/src/simple_physics.e:60:invariant
+/d/prod/simple_physics/src/vector_3d.e:19:		ensure
+/d/prod/simple_physics/src/vector_3d.e:31:		ensure
+/d/prod/simple_physics/src/vector_3d.e:53:		ensure
+/d/prod/simple_physics/src/vector_3d.e:62:		require
+/d/prod/simple_physics/src/vector_3d.e:66:		ensure
+/d/prod/simple_physics/src/vector_3d.e:75:		require
+/d/prod/simple_physics/src/vector_3d.e:79:		ensure
+/d/prod/simple_physics/src/vector_3d.e:90:		ensure
+/d/prod/simple_physics/src/vector_3d.e:99:		require
+/d/prod/simple_physics/src/vector_3d.e:103:		ensure
+/d/prod/simple_physics/src/vector_3d.e:110:		require
+/d/prod/simple_physics/src/vector_3d.e:118:		ensure
+/d/prod/simple_physics/src/vector_3d.e:137:		ensure
+/d/prod/simple_physics/src/vector_3d.e:143:invariant

@@ -1,0 +1,153 @@
+# Pre-Phase Specification Evidence
+# Project: d:\prod\simple_physics
+# Date: 2026-01-29
+
+Specification completed: YES
+Steps completed: 8/8
+
+## Documents Created
+- 01-PARSED-REQUIREMENTS.md (parsed from research, 14 FR + 8 NFR)
+- 02-DOMAIN-MODEL.md (9 domain concepts, relationships, MVP scope)
+- 03-CHALLENGED-ASSUMPTIONS.md (8 assumptions challenged, scope revised to linear-only)
+- 04-CLASS-DESIGN.md (9 classes designed, single responsibility, OOSC2 principles)
+- 05-CONTRACT-DESIGN.md (full require/ensure/invariant, frame conditions with MML)
+- 06-INTERFACE-DESIGN.md (fluent API, builder pattern, command-query separation)
+- 07-SPECIFICATION.md (formal Eiffel class skeletons with contracts)
+- 08-VALIDATION.md (OOSC2 compliance, requirements traceability, risk mitigations)
+
+## Classes Designed
+1. SIMPLE_PHYSICS (facade entry point)
+2. PHYSICS_WORLD (simulation engine, orchestrator)
+3. PHYSICS_BODY (rigid body with mass, position, velocity)
+4. VECTOR_3D (immutable 3D vector arithmetic)
+5. PHYSICS_INTEGRATOR (RK4 numerical integration)
+6. COLLISION_DETECTOR (sphere-sphere detection)
+7. COLLISION_RESOLVER (impulse response)
+8. COLLISION_INFO (collision data)
+9. PHYSICS_RESULT (step results, immutable for SCOOP)
+10. BODY_TYPE (enumeration: STATIC, DYNAMIC)
+
+## Contracts Defined
+- SIMPLE_PHYSICS: 3 features with contracts
+- PHYSICS_WORLD: 7 features + invariant
+- PHYSICS_BODY: 6 features + invariant
+- VECTOR_3D: 8 features
+- PHYSICS_INTEGRATOR: 2 features
+- COLLISION_DETECTOR: 2 features
+- COLLISION_RESOLVER: 1 feature
+- PHYSICS_RESULT: 6 features + invariant
+
+Total contract coverage: 35+ features, all specified
+
+## Requirements Traced
+Functional Requirements: 14/14 traced
+- FR-001, 002: PHYSICS_BODY acceleration computation
+- FR-003: PHYSICS_INTEGRATOR RK4 step
+- FR-004: VECTOR_3D arithmetic operations
+- FR-005, 006, 007: PHYSICS_BODY energy computation
+- FR-008, 009: COLLISION_DETECTOR and RESOLVER
+- FR-010, 011: PHYSICS_WORLD orchestration
+- FR-012, 013, 014: DEFERRED to Phase 2
+
+Non-Functional Requirements: 8/8 traced
+- NFR-001: RK4 stability, error < 1e-4
+- NFR-002: Target 50 bodies (scaled down from 100+)
+- NFR-003: Type-safe contracts throughout
+- NFR-004: SCOOP-compatible (immutable results)
+- NFR-005: Only simple_math dependency
+- NFR-006, 007: Contract coverage 100%
+- NFR-008: 50+ tests planned (Phase 1)
+
+## Assumptions Challenged
+8 assumptions questioned and resolved:
+- RK4 necessary? YES, Phase 1
+- Quaternions Phase 1? NO, deferred to Phase 2 (linear motion only)
+- Sphere collisions only? YES, Phase 1 scope
+- 100+ bodies required? NO, target 50 bodies Phase 1
+- simple_math complete? VALIDATION GATE (Phase 1)
+- Impulse-based response? YES, standard approach
+- No constraints MVP? YES, workarounds documented
+- Energy conservation exact? NO, to 0.1% tolerance
+
+## Phase 1 Scope (MVP) Finalized
+**Included:**
+- Linear rigid body motion (F = ma integration)
+- RK4 integration (4 Runge-Kutta stages)
+- VECTOR_3D arithmetic (add, subtract, dot, cross, normalize)
+- Sphere-sphere collision detection (distance < r1 + r2)
+- Impulse-based elastic collision response
+- Kinetic and potential energy computation
+- Physics world with 50 bodies target
+- Gravity application to all bodies
+- Body types: static (immovable) and dynamic (affected by forces)
+
+**Deferred to Phase 2:**
+- Rotation (quaternions, angular velocity, torque)
+- Plane and box collisions
+- Spring forces (Hooke's law)
+- Spatial hashing acceleration
+- Higher-order integration methods
+- Constraints (joints, hinges)
+- Soft body dynamics
+- Damping/friction
+
+## Design Decisions Finalized
+- Architecture: Facade pattern (SIMPLE_PHYSICS) hiding engines
+- Data: Immutable vectors (functional style), mutable bodies during integration
+- Integration: RK4 with error bound ~1e-4 per 100 steps
+- Collision: O(n²) narrow-phase only (no broad-phase yet)
+- Concurrency: SCOOP-safe via immutable PHYSICS_RESULT objects
+- Error handling: Contract-based (no exceptions)
+
+## OOSC2 Compliance
+✓ Single Responsibility: Each class has one purpose
+✓ Open/Closed: Extensible for Phase 2 without modification
+✓ Liskov Substitution: No inheritance needed Phase 1
+✓ Interface Segregation: Focused APIs per class
+✓ Dependency Inversion: Depends on abstractions (VECTOR_3D)
+
+## Eiffel Excellence
+✓ Command-Query Separation: set_gravity (command) vs position (query)
+✓ Uniform Access: position could be attribute or function
+✓ Design by Contract: 100% of public features specified
+✓ Genericity: VECTOR_3D works with REAL_64
+✓ Inheritance: IS-A patterns only (enum patterns)
+✓ Information Hiding: Implementation details private
+
+## Practical Quality
+✓ Void-safe: void_safety="all" enforced
+✓ SCOOP-compatible: Immutable results for safe sharing
+✓ simple_* first: Only simple_math as dependency
+✓ MML postconditions: Frame conditions specify unchanged state
+✓ Testable: Contracts enable automated test generation
+
+## Risk Mitigations Designed
+- Quaternion complexity: Entire rotation deferred to Phase 2
+- Collision bottleneck: Accept O(n²) for 50 bodies; spatial hashing Phase 2
+- Numerical stability: RK4 proven stable; extensive testing planned
+- Scope creep: Clear MVP definition; features documented for Phase 2
+- SCOOP complexity: Immutable results; careful region design
+
+## Integration Dependencies
+- simple_math: sqrt, sin, cos (VALIDATION GATE in Phase 1)
+- ISE base: LIST, ARRAY (standard)
+- ISE testing: EQA_TEST_SET (standard)
+
+## Performance Targets (Phase 1)
+- 50 bodies: target (scaled from 100+)
+- 5ms per frame: integration + collision detection
+- RK4 error: < 1e-4 per 100 time steps
+- Energy conservation: < 0.1% tolerance per elastic collision
+
+## Testing Strategy
+- Unit tests: VECTOR_3D operations, energy calculations
+- Integration tests: RK4 convergence, collision detection accuracy
+- Scenario tests: free fall, elastic collision, energy conservation
+- Adversarial tests: extreme forces, tiny time steps, edge cases
+
+## Ready for Implementation?
+VERDICT: YES - READY FOR PHASE 4 (Implementation)
+
+All requirements traced, risks identified and mitigated, contracts complete and precise, architecture sound (OOSC2 + Eiffel excellence), MVP scope realistic and documented.
+
+Status: SPECIFICATION_COMPLETE

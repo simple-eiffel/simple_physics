@@ -1,0 +1,119 @@
+# Phase 3 Task Evidence
+# Project: d:\prod\simple_physics
+# Date: 2026-01-29
+
+Tasks created: 12
+Task groups: 4 (foundation, orchestration, engines, integration)
+Dependencies identified: 15+ (between tasks)
+Human approved: YES (2026-01-29)
+
+## Task Breakdown
+
+### Foundation Classes (4 tasks)
+1. VECTOR_3D - 3D vector arithmetic (no dependencies)
+2. BODY_TYPE - Static/dynamic enumeration (no dependencies)
+3. PHYSICS_BODY - Rigid body data (depends on VECTOR_3D, BODY_TYPE)
+4. SIMPLE_PHYSICS - Facade entry point (depends on VECTOR_3D, PHYSICS_WORLD)
+
+### Engine Classes (3 tasks)
+5. PHYSICS_WORLD - Simulation orchestrator (depends on PHYSICS_BODY, VECTOR_3D)
+6. PHYSICS_INTEGRATOR - RK4 integration (depends on VECTOR_3D, PHYSICS_BODY)
+7. COLLISION_DETECTOR - Sphere collision (depends on VECTOR_3D, PHYSICS_BODY)
+
+### Response Classes (4 tasks)
+8. COLLISION_INFO - Collision data (depends on VECTOR_3D)
+9. COLLISION_RESOLVER - Impulse response (depends on VECTOR_3D, COLLISION_INFO)
+10. COLLISION_RESULT - Response data (depends on VECTOR_3D)
+11. PHYSICS_RESULT - Step results (depends on PHYSICS_BODY, COLLISION_INFO)
+
+### Integration (1 task)
+12. ECF Configuration & Test Framework (depends on all classes)
+
+## Execution Strategy
+
+Recommended order: 1 → 2 → 3 → 4 → 5 → (6,7 parallel) → 8 → 9 → 10 → 11 → 12
+
+Critical path:
+VECTOR_3D → PHYSICS_BODY → PHYSICS_WORLD → PHYSICS_INTEGRATOR → PHYSICS_RESULT
+
+Parallel opportunities:
+- PHYSICS_INTEGRATOR and COLLISION_DETECTOR can start once PHYSICS_WORLD ready
+- COLLISION_RESOLVER and COLLISION_RESULT can run concurrently
+
+## Acceptance Criteria Per Task
+
+Each task includes:
+✓ Acceptance criteria (specific, measurable)
+✓ Implementation notes (algorithms, contracts)
+✓ Dependencies (which tasks must complete first)
+
+Example (Task 1: VECTOR_3D):
+- Creation: make, zero factory
+- Arithmetic: add, subtract, scale
+- Products: dot, cross
+- Magnitude and normalize
+- Contracts: immutability, postconditions
+- Tests: arithmetic operations, vector norms
+
+## Contract Completeness
+
+Every task includes:
+✓ Preconditions (input validation)
+✓ Postconditions (output correctness, frame conditions)
+✓ Invariants (class consistency where applicable)
+✓ Acceptance criteria derived from contracts
+
+## Phase 4 Integration Gate
+
+Before implementation begins, verify:
+- [ ] simple_math provides sqrt, sin, cos, atan2
+- [ ] ISE base library version ≥ 25.02
+- [ ] void_safety="all" configuration supported
+- [ ] SCOOP concurrency enabled
+- [ ] EiffelStudio compiler ready
+
+## Risk Areas Identified
+
+1. **RK4 Numerical Integration (Task 6):**
+   - Complex algorithm with 4 stages
+   - Mitigation: Contracts specify error bounds, extensive testing
+
+2. **Collision Physics (Tasks 7-10):**
+   - Impulse-based response requires careful implementation
+   - Mitigation: Momentum/energy conservation contracts, scenario tests
+
+3. **Integration Complexity (Task 5):**
+   - Orchestrates multiple engines
+   - Mitigation: Facade pattern hides complexity, clear dependencies
+
+## Success Factors
+
+1. Contract-driven development: Use contracts to verify correctness
+2. Test-driven development: Skeletal tests from Phase 1, expand in Phase 5
+3. Incremental compilation: Compile after each task completion
+4. SCOOP safety: Immutable results ensure thread-safe sharing
+
+## Dependencies Summary
+
+Total edges in dependency graph: 15+
+
+Most connected: VECTOR_3D (required by 8 other classes)
+Least connected: BODY_TYPE (only required by PHYSICS_BODY)
+
+No circular dependencies identified.
+
+## File Locations
+
+Tasks file: d:\prod\simple_physics\.eiffel-workflow\tasks.md
+Evidence: d:\prod\simple_physics\.eiffel-workflow\evidence\phase3-tasks.txt
+Specifications: d:\prod\simple_physics\.eiffel-workflow\spec\01-08 (*.md)
+
+## Status
+
+Phase 3: TASKS DEFINED
+Phase 4: AWAITING HUMAN APPROVAL
+
+Once approved, proceed to /eiffel.implement d:\prod\simple_physics
+
+Total implementation effort estimate: HIGH (numerical + physics algorithms)
+Recommended parallelization: Tasks 6-7 after Task 5 complete

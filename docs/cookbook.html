@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookbook - simple_physics</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>simple_physics</h1>
+        <p class="tagline">Recipes & Examples</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="quick.html">Quick API</a></li>
+            <li><a href="user-guide.html">User Guide</a></li>
+            <li><a href="api-reference.html">API Reference</a></li>
+            <li><a href="#recipes">Recipes</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="recipes">
+            <h2>Recipes & Examples</h2>
+
+            <article id="recipe-projectile">
+                <h3>Recipe 1: Projectile Motion</h3>
+                <p>Simulate a ball thrown with initial velocity under gravity.</p>
+
+                <h4>Problem</h4>
+                <p>Launch a 0.5 kg ball from the ground with initial velocity (20 m/s, 45°, 0). Find where it lands.</p>
+
+                <h4>Solution</h4>
+                <pre><code>class PROJECTILE_DEMO
+create
+    make
+
+feature {NONE}
+    make
+        local
+            l_physics: SIMPLE_PHYSICS
+            l_world: PHYSICS_WORLD
+            l_body: PHYSICS_BODY
+            l_pos, l_vel: VECTOR_3D
+            l_gravity: REAL_64
+            i, max_steps: INTEGER
+            l_dt: REAL_64
+            l_landed: BOOLEAN
+        do
+            -- Setup
+            create l_physics.make
+            l_gravity := 9.8
+            l_physics.set_gravity (l_gravity).do_nothing
+            l_world := l_physics.create_world
+
+            -- Launch angle: 45 degrees = pi/4 radians
+            -- v_x = 20 * cos(45) = 14.14 m/s
+            -- v_y = 20 * sin(45) = 14.14 m/s
+            create l_pos.make (0.0, 0.0, 0.0)
+            create l_vel.make (14.14, 14.14, 0.0)
+
+            -- Create projectile
+            create l_body.make (0.5, 0.1, l_pos, l_vel)
+            l_world.add_body (l_body)
+
+            -- Simulate until landing
+            l_dt := 0.016
+            max_steps := 300  -- Max 5 seconds
+            l_landed := False
+
+            from i := 1 until i > max_steps or l_landed loop
+                l_world.integrate_step (l_dt)
+
+                if l_body.position.y < 0.0 then
+                    l_landed := True
+                    print ("Projectile landed at x=" + l_body.position.x.out + "m%N")
+                end
+
+                i := i + 1
+            end
+        end
+
+end</code></pre>
+
+                <h4>Variations</h4>
+                <ul>
+                    <li><strong>Air resistance:</strong> Reduce velocity each step (multiply by 0.99)</li>
+                    <li><strong>Different angle:</strong> Change cos/sin values</li>
+                    <li><strong>Wind:</strong> Add constant force in X direction</li>
+                </ul>
+            </article>
+
+            <article id="recipe-ball-drop">
+                <h3>Recipe 2: Free Fall with Terminal Velocity</h3>
+                <p>Drop a ball and observe as it accelerates then reaches terminal velocity.</p>
+
+                <h4>Problem</h4>
+                <p>A 10 kg ball dropped from 100m. With air resistance (drag coefficient 0.1), estimate when it reaches terminal velocity.</p>
+
+                <h4>Solution</h4>
+                <pre><code>class BALL_DROP_DEMO
+create
+    make
+
+feature {NONE}
+    make
+        local
+            l_physics: SIMPLE_PHYSICS
+            l_world: PHYSICS_WORLD
+            l_body: PHYSICS_BODY
+            l_pos, l_vel, l_new_vel: VECTOR_3D
+            i: INTEGER
+            l_dt: REAL_64
+            l_terminal_v: REAL_64
+            l_last_y: REAL_64
+            l_speed: REAL_64
+        do
+            create l_physics.make
+            l_physics.set_gravity (9.8).do_nothing
+            l_world := l_physics.create_world
+
+            -- Ball at 100m height
+            create l_pos.make (0.0, 100.0, 0.0)
+            create l_vel.zero
+
+            create l_body.make (10.0, 1.0, l_pos, l_vel)
+            l_world.add_body (l_body)
+
+            l_dt := 0.01
+            l_terminal_v := 0.0
+            l_last_y := 100.0
+
+            from i := 1 until i > 2000 loop
+                -- Apply simple drag: a_drag = -0.1 * v
+                l_vel := l_body.velocity
+                l_new_vel := l_vel.scale (0.99)  -- 1% drag per step
+                l_body.set_velocity (l_new_vel)
+
+                l_world.integrate_step (l_dt)
+
+                l_speed := l_body.velocity.magnitude
+
+                if i % 100 = 0 then  -- Every 100 steps
+                    print ("t=" + ((i * l_dt).out) +
+                           "s, y=" + l_body.position.y.out +
+                           "m, v=" + l_speed.out + " m/s%N")
+                end
+
+                if l_body.position.y < 0.0 then
+                    print ("Ball hit ground%N")
+                    print ("Terminal velocity reached: " + l_speed.out + " m/s%N")
+                end
+
+                i := i + 1
+            end
+        end
+
+end</code></pre>
+
+                <h4>Key Points</h4>
+                <ul>
+                    <li>Drag applied by reducing velocity each step</li>
+                    <li>Terminal velocity occurs when drag force = weight</li>
+                    <li>Formula: v_terminal = mass * g / drag_coefficient</li>
+                </ul>
+            </article>
+
+            <article id="recipe-collision">
+                <h3>Recipe 3: Collision Detection</h3>
+                <p>Two objects colliding head-on.</p>
+
+                <h4>Problem</h4>
+                <p>Ball A moving right at 5 m/s, Ball B moving left at 3 m/s. Both 1 kg. Find post-collision velocities.</p>
+
+                <h4>Solution</h4>
+                <pre><code>class COLLISION_DEMO
+create
+    make
+
+feature {NONE}
+    make
+        local
+            l_physics: SIMPLE_PHYSICS
+            l_world: PHYSICS_WORLD
+            l_ball_a, l_ball_b: PHYSICS_BODY
+            l_pos_a, l_pos_b, l_vel_a, l_vel_b: VECTOR_3D
+            i: INTEGER
+            l_dt: REAL_64
+        do
+            create l_physics.make
+            l_physics.set_gravity (0.0).do_nothing
+            l_world := l_physics.create_world
+
+            -- Ball A: right side, moving left
+            create l_pos_a.make (10.0, 0.0, 0.0)
+            create l_vel_a.make (-5.0, 0.0, 0.0)
+            create l_ball_a.make (1.0, 0.5, l_pos_a, l_vel_a)
+
+            -- Ball B: left side, moving right
+            create l_pos_b.make (-10.0, 0.0, 0.0)
+            create l_vel_b.make (3.0, 0.0, 0.0)
+            create l_ball_b.make (1.0, 0.5, l_pos_b, l_vel_b)
+
+            l_world.add_body (l_ball_a)
+            l_world.add_body (l_ball_b)
+
+            l_dt := 0.016
+
+            from i := 1 until i > 200 loop
+                l_world.integrate_step (l_dt)
+
+                if i = 1 or i = 50 or i = 100 then
+                    print ("Frame " + i.out +
+                           ": A at " + l_ball_a.position.x.out +
+                           ", velocity " + l_ball_a.velocity.x.out + " m/s%N")
+                    print ("       B at " + l_ball_b.position.x.out +
+                           ", velocity " + l_ball_b.velocity.x.out + " m/s%N%N")
+                end
+
+                i := i + 1
+            end
+        end
+
+end</code></pre>
+
+                <h4>Physics</h4>
+                <p>For elastic collision of equal masses, velocities exchange:</p>
+                <ul>
+                    <li>Before: A = -5 m/s, B = +3 m/s</li>
+                    <li>After: A ≈ +3 m/s, B ≈ -5 m/s</li>
+                </ul>
+            </article>
+
+            <article id="recipe-orbit">
+                <h3>Recipe 4: Simple Orbit Simulation</h3>
+                <p>Simulate circular orbital motion.</p>
+
+                <h4>Problem</h4>
+                <p>A satellite orbiting a fixed body. The satellite needs correct velocity for circular orbit at radius r.</p>
+
+                <h4>Solution</h4>
+                <pre><code>class ORBIT_DEMO
+create
+    make
+
+feature {NONE}
+    make
+        local
+            l_physics: SIMPLE_PHYSICS
+            l_world: PHYSICS_WORLD
+            l_planet, l_satellite: PHYSICS_BODY
+            l_pos_s, l_vel_s: VECTOR_3D
+            l_orbit_radius: REAL_64
+            l_orbital_velocity: REAL_64
+            l_g: REAL_64
+            i: INTEGER
+            l_dt: REAL_64
+        do
+            create l_physics.make
+            l_g := 9.8
+            l_physics.set_gravity (l_g).do_nothing
+            l_world := l_physics.create_world
+
+            -- Planet at origin (static)
+            create l_pos_s.zero
+            create l_planet.make_static (1000000.0, l_pos_s)
+            l_world.add_body (l_planet)
+
+            -- Satellite at 10,000m altitude
+            l_orbit_radius := 10000.0
+            create l_pos_s.make (l_orbit_radius, 0.0, 0.0)
+
+            -- Orbital velocity: v = sqrt(g * M / r)
+            -- Simplified: v = sqrt(g * r) for circular orbit
+            l_orbital_velocity := (l_g * l_orbit_radius).sqrt
+
+            -- Velocity is tangent to radius (upward)
+            create l_vel_s.make (0.0, l_orbital_velocity, 0.0)
+            create l_satellite.make (1000.0, 100.0, l_pos_s, l_vel_s)
+            l_world.add_body (l_satellite)
+
+            l_dt := 0.01
+
+            from i := 1 until i > 1000 loop
+                l_world.integrate_step (l_dt)
+
+                if i % 100 = 0 then
+                    print ("Orbital height: " + l_satellite.position.magnitude.out + "m%N")
+                end
+
+                i := i + 1
+            end
+        end
+
+end</code></pre>
+
+                <h4>Notes</h4>
+                <ul>
+                    <li>Simplified model (no mass interactions)</li>
+                    <li>Actual orbit equation: v = sqrt(G*M/r)</li>
+                    <li>Small time steps needed for stability</li>
+                </ul>
+            </article>
+
+            <article id="recipe-pool-table">
+                <h3>Recipe 5: Pool Table Dynamics</h3>
+                <p>Simulate billiard balls on a table with friction.</p>
+
+                <h4>Problem</h4>
+                <p>Strike ball with cue, observe collision chain and friction effects.</p>
+
+                <h4>Solution</h4>
+                <pre><code>class POOL_TABLE_DEMO
+create
+    make
+
+feature {NONE}
+    make
+        local
+            l_physics: SIMPLE_PHYSICS
+            l_world: PHYSICS_WORLD
+            l_balls: ARRAYED_LIST [PHYSICS_BODY]
+            l_ball: PHYSICS_BODY
+            l_pos, l_vel: VECTOR_3D
+            l_friction: REAL_64
+            i, j: INTEGER
+            l_dt: REAL_64
+        do
+            create l_physics.make
+            l_physics.set_gravity (0.0).do_nothing  -- Horizontal table
+            l_world := l_physics.create_world
+
+            -- Create 15 pool balls in triangular formation
+            create l_balls.make (15)
+            j := 0
+            from i := 0 until i > 4 loop
+                -- Row i has (i+1) balls
+                create l_pos.make (
+                    (i * 0.07).negated,  -- Back of table
+                    -1.0 + (i * 0.14),   -- Center rows
+                    0.0
+                )
+                create l_vel.zero
+                create l_ball.make (0.17, 0.028, l_pos, l_vel)
+                l_world.add_body (l_ball)
+                l_balls.force (l_ball, j)
+                j := j + 1
+                i := i + 1
+            end
+
+            -- Cue ball: Strike with high velocity
+            create l_pos.make (1.0, 0.0, 0.0)
+            create l_vel.make (-5.0, 0.0, 0.0)
+            create l_ball.make (0.17, 0.028, l_pos, l_vel)
+            l_world.add_body (l_ball)
+
+            -- Simulate with friction
+            l_friction := 0.98  -- 2% energy loss per step
+            l_dt := 0.016
+
+            from i := 1 until i > 1000 loop
+                l_world.integrate_step (l_dt)
+
+                -- Apply friction to all balls
+                across l_world.bodies as l_body_cursor loop
+                    l_vel := l_body_cursor.item.velocity.scale (l_friction)
+                    l_body_cursor.item.set_velocity (l_vel)
+                end
+
+                i := i + 1
+            end
+
+            print ("Simulation complete%N")
+        end
+
+end</code></pre>
+
+                <h4>Key Techniques</h4>
+                <ul>
+                    <li><strong>Friction:</strong> Multiply velocity by (1 - friction_coeff)</li>
+                    <li><strong>Damping:</strong> Applied after each physics step</li>
+                    <li><strong>Ball radius:</strong> 28mm standard (0.028m)</li>
+                </ul>
+            </article>
+
+            <article id="recipe-tower">
+                <h3>Recipe 6: Stacking & Stability</h3>
+                <p>Stack blocks and test stability.</p>
+
+                <h4>Problem</h4>
+                <p>Stack 5 blocks on top of each other. Perturb the top block to test tipping.</p>
+
+                <h4>Solution</h4>
+                <pre><code>class TOWER_DEMO
+create
+    make
+
+feature {NONE}
+    make
+        local
+            l_physics: SIMPLE_PHYSICS
+            l_world: PHYSICS_WORLD
+            l_block: PHYSICS_BODY
+            l_pos, l_vel: VECTOR_3D
+            i: INTEGER
+            l_dt: REAL_64
+            l_block_height: REAL_64
+        do
+            create l_physics.make
+            l_physics.set_gravity (9.8).do_nothing
+            l_world := l_physics.create_world
+
+            l_block_height := 0.5
+
+            -- Create 5 blocks stacked
+            from i := 0 until i >= 5 loop
+                create l_pos.make (
+                    0.0,                        -- Center X
+                    (i * l_block_height) + l_block_height / 2.0,  -- Stack height
+                    0.0
+                )
+                create l_vel.zero
+
+                -- Add small lateral perturbation to top block
+                if i = 4 then
+                    create l_vel.make (1.0, 0.0, 0.0)  -- Nudge top
+                end
+
+                create l_block.make (1.0, 0.25, l_pos, l_vel)
+                l_world.add_body (l_block)
+                i := i + 1
+            end
+
+            -- Add floor
+            create l_pos.make (0.0, -l_block_height / 2.0, 0.0)
+            create l_block.make_static (10000.0, l_pos)
+            l_world.add_body (l_block)
+
+            l_dt := 0.016
+
+            from i := 1 until i > 500 loop
+                l_world.integrate_step (l_dt)
+
+                if i % 50 = 0 then
+                    print ("Step " + i.out + ": Simulating...%N")
+                end
+
+                i := i + 1
+            end
+
+            print ("Tower stability test complete%N")
+        end
+
+end</code></pre>
+
+                <h4>Physics</h4>
+                <ul>
+                    <li>Blocks should fall if top block perturbed enough</li>
+                    <li>Small perturbation may settle back (stable)</li>
+                    <li>Large perturbation causes cascade (unstable)</li>
+                </ul>
+            </article>
+        </section>
+
+        <section id="troubleshooting-recipes">
+            <h2>Troubleshooting Recipes</h2>
+
+            <h3>Problem: Simulation Explodes</h3>
+            <p><strong>Symptom:</strong> Objects fly off in random directions.</p>
+            <p><strong>Cause:</strong> Time step too large or velocities unrealistic.</p>
+            <p><strong>Fix:</strong></p>
+            <pre><code>-- Try smaller time step
+l_dt := 0.008  -- Instead of 0.016
+
+-- Or check velocity magnitude
+if l_body.velocity.magnitude > 100.0 then
+    -- Warning: unrealistic velocity
+end</code></pre>
+
+            <h3>Problem: Objects Pass Through Walls</h3>
+            <p><strong>Symptom:</strong> Bodies don't collide with boundaries.</p>
+            <p><strong>Cause:</strong> No static boundary bodies created.</p>
+            <p><strong>Fix:</strong></p>
+            <pre><code>-- Add static walls
+create l_wall.make_static (10000.0, create {VECTOR_3D}.make (-10.0, 0.0, 0.0))
+l_world.add_body (l_wall)</code></pre>
+
+            <h3>Problem: Simulation Too Slow</h3>
+            <p><strong>Symptom:</strong> Frame rate drops with many bodies.</p>
+            <p><strong>Cause:</strong> Collision detection is O(n²).</p>
+            <p><strong>Fix:</strong></p>
+            <pre><code>-- Reduce body count
+-- Or use larger time steps (less accurate)
+l_dt := 0.033  -- 30 FPS instead of 60 FPS
+
+-- Or reduce collision checks
+-- (Phase 2: spatial partitioning will help)</code></pre>
+
+            <h3>Problem: Jittering Bodies</h3>
+            <p><strong>Symptom:</strong> Objects vibrate when at rest on surface.</p>
+            <p><strong>Cause:</strong> Floating point precision limits.</p>
+            <p><strong>Fix:</strong></p>
+            <pre><code>-- Damp very small velocities
+if l_body.velocity.magnitude < 0.01 then
+    create l_new_vel.zero
+    l_body.set_velocity (l_new_vel)
+end</code></pre>
+        </section>
+
+        <section id="performance-recipes">
+            <h2>Performance Optimization Recipes</h2>
+
+            <h3>Recipe: Object Pooling</h3>
+            <p>Reuse body objects instead of creating new ones:</p>
+            <pre><code>-- Pre-allocate pool of bodies
+l_pool := create l_pool.make (100)
+
+-- Reuse instead of create
+l_body := l_pool.item (index)
+l_body.set_position (new_pos)
+l_body.set_velocity (new_vel)
+l_world.add_body (l_body)</code></pre>
+
+            <h3>Recipe: Spatial Culling</h3>
+            <p>Skip processing distant objects:</p>
+            <pre><code>-- Only process bodies within view frustum
+across l_world.bodies as l_body_cursor loop
+    if is_in_frustum (l_body_cursor.item.position) then
+        render (l_body_cursor.item)
+    end
+end</code></pre>
+
+            <h3>Recipe: Sleeping Bodies</h3>
+            <p>Deactivate bodies that aren't moving:</p>
+            <pre><code>-- Mark bodies as sleeping if velocity very small
+if l_body.velocity.magnitude < 0.001 then
+    -- Don't integrate this frame
+end</code></pre>
+        </section>
+
+        <footer>
+            <p>For API documentation, see <a href="api-reference.html">API Reference</a>. For architecture, see <a href="architecture.html">Architecture</a>.</p>
+            <p>&copy; 2026 Simple Eiffel Contributors. MIT License.</p>
+        </footer>
+    </main>
+</body>
+</html>

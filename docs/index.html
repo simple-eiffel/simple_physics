@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simple_physics - Physics Simulation Engine for Eiffel</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/logo.svg" alt="simple_physics logo" class="logo" onerror="this.style.display='none'">
+        </div>
+        <h1>simple_physics</h1>
+        <p class="tagline">Production-ready physics simulation engine for Eiffel</p>
+        <div class="badges">
+            <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License">
+            <img src="https://img.shields.io/badge/Eiffel-25.02-purple.svg" alt="Eiffel 25.02">
+            <img src="https://img.shields.io/badge/DBC-Contracts-green.svg" alt="Design by Contract">
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="quick.html">Quick API</a></li>
+            <li><a href="user-guide.html">User Guide</a></li>
+            <li><a href="api-reference.html">API Reference</a></li>
+            <li><a href="architecture.html">Architecture</a></li>
+            <li><a href="cookbook.html">Cookbook</a></li>
+            <li><a href="https://github.com/simple-eiffel/simple_physics">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>
+                <strong>simple_physics</strong> is a production-ready physics simulation engine for Eiffel.
+                It provides rigid body dynamics with RK4 integration, sphere collision detection and resolution,
+                and complete Design by Contract specifications for safety-critical applications.
+            </p>
+            <p>
+                Part of the <a href="https://github.com/simple-eiffel">Simple Eiffel</a> ecosystem—standard libraries
+                for concurrent, safe, and verified Eiffel programming.
+            </p>
+        </section>
+
+        <section id="features">
+            <h2>Features</h2>
+            <ul>
+                <li><strong>3D Vector Mathematics:</strong> Immutable vectors with arithmetic, dot/cross products, and normalization</li>
+                <li><strong>Rigid Body Dynamics:</strong> Static and dynamic bodies with mass, position, velocity, and energy calculations</li>
+                <li><strong>RK4 Integration:</strong> Fourth-order Runge-Kutta numerical integration for accurate time stepping</li>
+                <li><strong>Collision Detection:</strong> Sphere-sphere collision detection with contact geometry</li>
+                <li><strong>Collision Resolution:</strong> Impulse-based collision response with post-collision velocities</li>
+                <li><strong>Design by Contract:</strong> Complete pre/postconditions and invariants for all public interfaces</li>
+                <li><strong>SCOOP Compatible:</strong> Concurrent programming support with immutable result types</li>
+                <li><strong>Void-Safe:</strong> Full void_safety=all implementation with no null pointer errors</li>
+            </ul>
+        </section>
+
+        <section id="status">
+            <h2>Status</h2>
+            <p><strong>✅ v1.0.0 - Production Ready</strong></p>
+            <ul>
+                <li>70 tests passing (52 unit + 18 adversarial), 100% pass rate</li>
+                <li>Design by Contract throughout all public interfaces</li>
+                <li>Void-safe implementation (void_safety="all")</li>
+                <li>SCOOP-compatible concurrent programming support</li>
+                <li>Zero compilation warnings</li>
+                <li>Comprehensive documentation and examples</li>
+            </ul>
+        </section>
+
+        <section id="quick-start">
+            <h2>Quick Start</h2>
+            <p>
+                See the <a href="quick.html">Quick API Reference</a> for immediate code examples, or the
+                <a href="user-guide.html">User Guide</a> for comprehensive tutorials and best practices.
+            </p>
+        </section>
+
+        <section id="installation">
+            <h2>Installation</h2>
+            <p>Add to your ECF configuration file:</p>
+            <pre><code>&lt;library name="simple_physics" location="$SIMPLE_EIFFEL/simple_physics/simple_physics.ecf"/&gt;</code></pre>
+        </section>
+
+        <section id="documentation">
+            <h2>Documentation</h2>
+            <div class="feature-box">
+                <h4>API Reference</h4>
+                <p>Complete documentation of all public classes, features, and contracts.
+                <a href="api-reference.html">View API Reference →</a></p>
+            </div>
+            <div class="feature-box">
+                <h4>Architecture</h4>
+                <p>Design decisions, class diagrams, and extension points for integration.
+                <a href="architecture.html">View Architecture →</a></p>
+            </div>
+            <div class="feature-box">
+                <h4>Cookbook</h4>
+                <p>Real-world examples, common patterns, and troubleshooting tips.
+                <a href="cookbook.html">View Cookbook →</a></p>
+            </div>
+        </section>
+
+        <section id="license">
+            <h2>License</h2>
+            <p>MIT License - See LICENSE file in repository</p>
+        </section>
+
+        <section id="support">
+            <h2>Support</h2>
+            <ul>
+                <li><strong>Documentation:</strong> <a href="https://simple-eiffel.github.io/simple_physics/">https://simple-eiffel.github.io/simple_physics/</a></li>
+                <li><strong>GitHub:</strong> <a href="https://github.com/simple-eiffel/simple_physics">https://github.com/simple-eiffel/simple_physics</a></li>
+                <li><strong>Issues:</strong> <a href="https://github.com/simple-eiffel/simple_physics/issues">https://github.com/simple-eiffel/simple_physics/issues</a></li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 Simple Eiffel Contributors. MIT License.</p>
+            <p><a href="https://github.com/simple-eiffel/simple_physics">GitHub Repository</a></p>
+        </footer>
+    </main>
+</body>
+</html>

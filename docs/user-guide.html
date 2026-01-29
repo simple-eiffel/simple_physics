@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide - simple_physics</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>simple_physics</h1>
+        <p class="tagline">User Guide & Tutorials</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="quick.html">Quick API</a></li>
+            <li><a href="#installation">Installation</a></li>
+            <li><a href="#getting-started">Getting Started</a></li>
+            <li><a href="api-reference.html">Full API</a></li>
+            <li><a href="cookbook.html">Cookbook</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="installation">
+            <h2>Installation</h2>
+            <p>simple_physics is a library for Eiffel 25.02+. Add it to your project using the ECF (Eiffel Configuration File).</p>
+
+            <h3>Step 1: Add to Your ECF</h3>
+            <pre><code>&lt;library name="simple_physics" location="$SIMPLE_EIFFEL/simple_physics/simple_physics.ecf"/&gt;</code></pre>
+
+            <h3>Step 2: Set Compiler Settings</h3>
+            <p>Ensure your project uses void-safe mode:</p>
+            <pre><code>&lt;capability&gt;
+    &lt;void_safety support="all"/&gt;
+    &lt;concurrency support="scoop"/&gt;
+&lt;/capability&gt;</code></pre>
+
+            <h3>Step 3: Compile</h3>
+            <pre><code>ec -batch -config your_project.ecf -target your_target -c_compile</code></pre>
+        </section>
+
+        <section id="getting-started">
+            <h2>Getting Started</h2>
+
+            <h3>Your First Simulation</h3>
+            <p>Create a simple falling object simulation:</p>
+            <pre><code>class HELLO_PHYSICS
+create
+    make
+
+feature {NONE} -- Initialization
+
+    make
+            -- Run a simple physics simulation.
+        local
+            l_physics: SIMPLE_PHYSICS
+            l_world: PHYSICS_WORLD
+            l_body: PHYSICS_BODY
+            l_pos, l_vel, l_gravity: VECTOR_3D
+            i: INTEGER
+            l_dt: REAL_64
+        do
+            -- Create physics engine with gravity
+            create l_physics.make
+            l_physics.set_gravity (9.8).do_nothing
+            l_world := l_physics.create_world
+
+            -- Create a falling object at height 100 meters
+            create l_pos.make (0.0, 100.0, 0.0)
+            create l_vel.zero
+            create l_body.make (10.0, 0.5, l_pos, l_vel)
+
+            -- Add to world
+            l_world.add_body (l_body)
+
+            -- Simulate 10 seconds with 0.016 second time steps (60 FPS)
+            l_dt := 0.016
+            from i := 1 until i > (10.0 / l_dt).truncated_to_integer loop
+                l_world.integrate_step (l_dt)
+                print ("Time: " + ((i * l_dt).out) + "s, Height: " + l_body.position.y.out + "m%N")
+                i := i + 1
+            end
+
+            print ("Impact at " + l_body.position.y.out + " meters%N")
+        end
+
+end</code></pre>
+
+            <h3>Understanding Vectors</h3>
+            <p>Vectors represent positions, velocities, and forces in 3D space:</p>
+            <pre><code>local
+    l_pos, l_vel, l_result: VECTOR_3D
+do
+    -- Position of object at (1, 2, 3) meters
+    create l_pos.make (1.0, 2.0, 3.0)
+
+    -- Velocity of 5 m/s in x-direction
+    create l_vel.make (5.0, 0.0, 0.0)
+
+    -- Distance from origin
+    print ("Distance: " + l_pos.magnitude.out)
+
+    -- After 1 second, new position is old + velocity
+    l_result := l_pos.add (l_vel)
+
+    -- Direction of motion (unit vector)
+    l_result := l_vel.normalize
+end</code></pre>
+
+            <h3>Creating Bodies</h3>
+            <p>Two types of bodies: dynamic (movable) and static (immovable):</p>
+            <pre><code>local
+    l_body_dynamic, l_body_static: PHYSICS_BODY
+    l_pos, l_vel: VECTOR_3D
+do
+    -- Dynamic body: falls under gravity, affected by forces
+    create l_pos.make (0.0, 50.0, 0.0)
+    create l_vel.zero
+    create l_body_dynamic.make (
+        5.0,      -- mass in kg
+        0.5,      -- radius in meters
+        l_pos,    -- initial position
+        l_vel     -- initial velocity
+    )
+
+    -- Static body: immovable, like a floor
+    create l_pos.make (0.0, 0.0, 0.0)
+    create l_body_static.make_static (
+        1000.0,   -- mass (not used for statics, but required)
+        l_pos     -- position
+    )
+
+    -- Verify types
+    if l_body_dynamic.body_type.is_dynamic then
+        print ("Body is dynamic%N")
+    end
+
+    if l_body_static.body_type.is_static then
+        print ("Body is static%N")
+    end
+end</code></pre>
+        </section>
+
+        <section id="common-patterns">
+            <h2>Common Patterns</h2>
+
+            <h3>Simulation Loop</h3>
+            <p>The standard pattern for running a physics simulation:</p>
+            <pre><code>-- Setup
+l_world.set_gravity (create {VECTOR_3D}.make (0.0, -9.8, 0.0))
+
+-- Main loop
+from i := 1 until i > max_frames loop
+    -- Advance simulation by 0.016 seconds (60 FPS)
+    l_result := l_world.integrate_step (0.016)
+
+    -- Process each body
+    across l_world.bodies as l_body_cursor loop
+        -- Update display, check collisions, etc.
+        process_body (l_body_cursor.item)
+    end
+
+    -- Increment frame
+    i := i + 1
+end</code></pre>
+
+            <h3>Energy Calculations</h3>
+            <p>Monitor total energy in the system (kinetic + potential):</p>
+            <pre><code>local
+    l_total_ke, l_total_pe, l_total_energy: REAL_64
+    l_gravity: REAL_64
+do
+    l_gravity := 9.8
+    l_total_ke := 0.0
+    l_total_pe := 0.0
+
+    across l_world.bodies as l_body_cursor loop
+        if l_body_cursor.item.body_type.is_dynamic then
+            l_total_ke := l_total_ke + l_body_cursor.item.kinetic_energy
+        end
+        l_total_pe := l_total_pe + l_body_cursor.item.potential_energy (l_gravity)
+    end
+
+    l_total_energy := l_total_ke + l_total_pe
+    print ("KE: " + l_total_ke.out + " J, PE: " + l_total_pe.out + " J, Total: " + l_total_energy.out + " J%N")
+end</code></pre>
+
+            <h3>Checking Body Type</h3>
+            <p>Handle dynamic and static bodies differently:</p>
+            <pre><code>across l_world.bodies as l_body_cursor loop
+    if l_body_cursor.item.body_type.is_dynamic then
+        -- Compute physics for moving object
+        apply_gravity (l_body_cursor.item)
+        resolve_collisions (l_body_cursor.item)
+    else
+        -- Static body: no updates needed
+        -- (still participates in collision detection)
+    end
+end</code></pre>
+
+            <h3>Modifying Bodies at Runtime</h3>
+            <p>Change position and velocity during simulation:</p>
+            <pre><code>local
+    l_new_pos, l_new_vel: VECTOR_3D
+do
+    -- Teleport object
+    create l_new_pos.make (10.0, 50.0, 0.0)
+    l_body.set_position (l_new_pos)
+
+    -- Change velocity
+    create l_new_vel.make (5.0, 0.0, 0.0)
+    l_body.set_velocity (l_new_vel)
+end</code></pre>
+        </section>
+
+        <section id="best-practices">
+            <h2>Best Practices</h2>
+
+            <h3>1. Immutable Vectors</h3>
+            <p>Vectors are immutable. Operations return new vectors:</p>
+            <pre><code>-- ✓ Correct: Create new vector
+l_result := l_v1.add (l_v2)
+
+-- ✗ Wrong: Can't modify in place
+l_v1.x := 10.0  -- Error: x is read-only</code></pre>
+
+            <h3>2. Time Step Consistency</h3>
+            <p>Use fixed time steps for physics stability:</p>
+            <pre><code>-- ✓ Correct: Fixed 60 FPS
+l_world.integrate_step (0.016)
+
+-- ✗ Wrong: Variable time steps cause instability
+l_world.integrate_step (dt)  -- dt varies frame-to-frame</code></pre>
+
+            <h3>3. Gravity Direction</h3>
+            <p>Gravity is a vector. Negative Y is down (Earth-like):</p>
+            <pre><code>-- ✓ Correct: Gravity points downward
+create l_gravity.make (0.0, -9.8, 0.0)
+l_world.set_gravity (l_gravity)
+
+-- ✗ Wrong: Positive Y makes objects fall up
+create l_gravity.make (0.0, 9.8, 0.0)</code></pre>
+
+            <h3>4. Fluent Configuration</h3>
+            <p>Set up the world before adding bodies:</p>
+            <pre><code>-- ✓ Correct: Configure first
+l_physics.set_gravity (9.8).do_nothing
+l_world := l_physics.create_world
+l_world.add_body (l_body)
+
+-- ✗ Wrong: Configuring after bodies may be inconsistent
+l_world.add_body (l_body)
+l_physics.set_gravity (9.8).do_nothing</code></pre>
+
+            <h3>5. Memory Management</h3>
+            <p>Bodies are managed by the world. Remove when done:</p>
+            <pre><code>-- Add body to world
+l_world.add_body (l_body)
+
+-- ... later ...
+
+-- Remove when no longer needed
+l_world.remove_body (l_body)</code></pre>
+        </section>
+
+        <section id="performance-tips">
+            <h2>Performance Tips</h2>
+
+            <h3>Body Count</h3>
+            <p>Collision detection is O(n²). Keep body count reasonable:</p>
+            <ul>
+                <li>0-50 bodies: No performance issues</li>
+                <li>50-200 bodies: Monitor performance</li>
+                <li>200+ bodies: Consider spatial partitioning (not yet in simple_physics)</li>
+            </ul>
+
+            <h3>Time Step Size</h3>
+            <p>Smaller steps = more accurate but slower:</p>
+            <ul>
+                <li>0.016s (60 FPS): Good for real-time visualization</li>
+                <li>0.008s (120 FPS): More accurate, 2x slower</li>
+                <li>0.033s (30 FPS): Less accurate, faster (not recommended)</li>
+            </ul>
+
+            <h3>Sphere Radius</h3>
+            <p>Smaller radius = more collision checks:</p>
+            <ul>
+                <li>Keep radii consistent with body count</li>
+                <li>Avoid very small radii (< 0.01m) unless necessary</li>
+                <li>Static bodies don't need accurate radii for collision</li>
+            </ul>
+        </section>
+
+        <section id="troubleshooting">
+            <h2>Troubleshooting</h2>
+
+            <h3>Objects Fall Too Slowly</h3>
+            <p><strong>Problem:</strong> Gravity seems weak.</p>
+            <p><strong>Solution:</strong> Check gravity vector direction and magnitude:</p>
+            <pre><code>-- Gravity should be negative Y for downward
+create l_gravity.make (0.0, -9.8, 0.0)  -- Correct
+create l_gravity.make (0.0, 9.8, 0.0)   -- Wrong!</code></pre>
+
+            <h3>Objects Jump or Teleport</h3>
+            <p><strong>Problem:</strong> Bodies move erratically or far between frames.</p>
+            <p><strong>Solution:</strong> Use consistent time steps and reasonable velocities:</p>
+            <pre><code>-- ✓ Correct: Reasonable velocity
+create l_vel.make (5.0, 0.0, 0.0)  -- 5 m/s
+
+-- ✗ Wrong: Extremely high velocity
+create l_vel.make (5000.0, 0.0, 0.0)  -- 5000 m/s!</code></pre>
+
+            <h3>Energy Increases Over Time</h3>
+            <p><strong>Problem:</strong> Total energy (KE + PE) grows without input.</p>
+            <p><strong>Solution:</strong> This can happen with large time steps. Try smaller steps:</p>
+            <pre><code>-- Try 0.008 instead of 0.016
+l_world.integrate_step (0.008)</code></pre>
+
+            <h3>Collisions Don't Seem Right</h3>
+            <p><strong>Problem:</strong> Bodies pass through each other.</p>
+            <p><strong>Solution:</strong> Ensure body radii are set appropriately:</p>
+            <pre><code>-- Bodies should have realistic radii
+create l_body.make (
+    10.0,    -- mass
+    0.5,     -- radius (500 mm - not too small!)
+    l_pos,
+    l_vel
+)</code></pre>
+        </section>
+
+        <section id="advanced">
+            <h2>Advanced Topics</h2>
+
+            <h3>RK4 Integration</h3>
+            <p>simple_physics uses fourth-order Runge-Kutta (RK4) integration for accurate physics simulation. This means forces are evaluated at four points within each time step for better accuracy than simpler methods.</p>
+
+            <h3>Sphere Collision Detection</h3>
+            <p>Collision detection uses sphere-sphere algorithms. Two spheres collide when the distance between centers is less than the sum of their radii.</p>
+
+            <h3>Impulse-Based Resolution</h3>
+            <p>When bodies collide, simple_physics applies impulses (instantaneous changes in velocity) to simulate realistic bouncing.</p>
+
+            <h3>Design by Contract</h3>
+            <p>All features are protected by Design by Contract (DBC) specifications:</p>
+            <ul>
+                <li><strong>Preconditions:</strong> What must be true before calling a feature</li>
+                <li><strong>Postconditions:</strong> What will be true after calling a feature</li>
+                <li><strong>Invariants:</strong> What must always be true for an object</li>
+            </ul>
+            <p>These contracts serve as executable documentation and catch bugs at runtime.</p>
+        </section>
+
+        <footer>
+            <p>For quick reference, see <a href="quick.html">Quick API</a>. For complete API docs, see <a href="api-reference.html">API Reference</a>.</p>
+            <p>&copy; 2026 Simple Eiffel Contributors. MIT License.</p>
+        </footer>
+    </main>
+</body>
+</html>
