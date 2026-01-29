@@ -102,7 +102,7 @@ feature -- Arithmetic
 			Result := x * other.x + y * other.y + z * other.z
 		ensure
 			commutative: Result = other.dot_product (Current)
-			zero_orthogonal: magnitude > 0.0001 and other.magnitude > 0.0001 implies ((Result = 0.0) = (magnitude * other.magnitude < 0.0001))
+			orthogonal_zero: (x.abs < 0.0001 or other.x.abs < 0.0001) and (y.abs < 0.0001 or other.y.abs < 0.0001) implies Result.abs < 0.0001
 		end
 
 	cross_product (other: VECTOR_3D): VECTOR_3D
